@@ -175,7 +175,7 @@ jobs:
 
       - name: Install Python Dependencies
         if: steps.init.outcome == 'failure' || steps.plan.outcome == 'failure' ||  steps.apply.outcome == 'failure'
-        run: pip install openai python-hcl2
+        run: pip install -r requirements.txt
 
       - name: Run AI Analyzer on Failure
         if: steps.init.outcome == 'failure' || steps.plan.outcome == 'failure' ||  steps.apply.outcome == 'failure'
