@@ -91,7 +91,7 @@ Go to your GitHub repository → Settings → Secrets and variables → Actions
 
 **Add Repository Secrets:**
 ```yaml
-DEPLOYMENT_ROLE: arn:aws:iam::YOUR-ACCOUNT:role/deployment-role
+DEPLOYMENT_ROLE: arn:aws:iam::<your-account>:role/deployment-role
 OPENAI_API_KEY: sk-your-openai-key-here
 INFRACOST_API_KEY: ico-your-infracost-key-here
 # GITHUB_TOKEN is automatically provided
