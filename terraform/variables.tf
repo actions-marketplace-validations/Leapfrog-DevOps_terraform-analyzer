@@ -7,18 +7,18 @@ variable "aws_region" {
 variable "s3_bucket_name" {
   description = "S3 bucket name"
   type        = string
-  default     = "team-5-bucket-sample-open-source"
+  default     = "sample-open-source"
 }
 
 variable "lambda_function_name" {
   description = "Lambda function name"
   type        = string
-  default     = "team-5-lambda"
+  default     = "sample-lambda"
 }
 
 variable "ec2_instance_name" {
   description = "EC2 instance name"
   type        = string
-  default     = "team-5-ec2"
+  default     = "sample-ec2"
 }
 
