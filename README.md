@@ -53,7 +53,7 @@ terraform-analyzer/
 
 #### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-username/terraform-analyzer.git
+git clone https://github.com/Leapfrog-DevOps/terraform-analyzer.git
 cd terraform-analyzer
 ```
 
