@@ -286,8 +286,8 @@ The workflow automatically runs on:
 #### On Pull Request
 1. Runs `terraform plan`
 2. Posts plan summary as PR comment
-3. **If plan fails**: Triggers AI error analysis and creates auto-fix branch ![Plan Fail](.github/images/failed_pipeline.png) ![Terraform Fix](.github/images/terraform_fix.png)
-4. **If plan succeeds**: Uploads plan artifacts and triggers cost analyzer workflow ![Cost Analysis](.github/images/infracost.png)
+3. **If plan fails**: Triggers AI error analysis and creates auto-fix branch ![Plan Fail](screenshots/failed_pipeline.png) ![Terraform Fix](screenshots/terraform_fix.png)
+4. **If plan succeeds**: Uploads plan artifacts and triggers cost analyzer workflow ![Cost Analysis](screenshots/infracost.png)
 
 #### On Manual Apply
 1. Runs `terraform apply`
