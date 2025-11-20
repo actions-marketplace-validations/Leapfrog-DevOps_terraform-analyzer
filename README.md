@@ -41,13 +41,183 @@ terraform-analyzer/
 
 ## 🛠️ Setup & Configuration
 
+Choose your preferred deployment method:
+
+## 🚀 Option 1: GitHub Marketplace Action (Recommended)
+
+**Perfect for**: Quick setup, existing projects, minimal configuration
+
+### ⚡ Quick Start
+
+```yaml
+name: Terraform AI Analyzer
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      action:
+        type: choice
+        options: [plan, apply]
+        default: plan
+
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Terraform AI Analyzer
+        uses: Leapfrog-DevOps/terraform-analyzer@v1
+        with:
+          deployment-role: ${{ secrets.AWS_DEPLOYMENT_ROLE }}
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          infracost-api-key: ${{ secrets.INFRACOST_API_KEY }}
+          action: ${{ github.event.inputs.action || 'plan' }}
+```
+
+### 📋 Prerequisites
+
+- **AWS Account** with OIDC provider configured
+- **OpenAI API Key** ([Get here](https://platform.openai.com/api-keys))
+- **Infracost API Key** ([Get here](https://dashboard.infracost.io/)) - Optional, 1,000 free runs/month
+- **GitHub repository** with Actions enabled
+
+### 🔧 Required Secrets
+
+Add these to your repository secrets:
+
+| Secret | Description | Example |
+|--------|-------------|----------|
+| `AWS_DEPLOYMENT_ROLE` | AWS IAM role ARN for OIDC | `arn:aws:iam::123456789:role/deployment-role` |
+| `OPENAI_API_KEY` | OpenAI API key | `sk-...` |
+| `INFRACOST_API_KEY` | Infracost API key (optional) | `ico-...` |
+
+### ⚙️ Action Inputs
+
+| Input | Description | Required | Default |
+|-------|-------------|----------|----------|
+| `terraform-version` | Terraform version | No | `1.11.4` |
+| `terraform-directory` | Directory with Terraform files | No | `./terraform` |
+| `action` | Terraform action (plan/apply) | No | `plan` |
+| `aws-region` | AWS region | No | `us-east-1` |
+| `deployment-role` | AWS IAM role ARN | **Yes** | - |
+| `openai-api-key` | OpenAI API key | **Yes** | - |
+| `infracost-api-key` | Infracost API key | No | - |
+| `enable-cost-analysis` | Enable cost analysis | No | `true` |
+| `comment-pr` | Comment on PRs | No | `true` |
+
+### 📤 Action Outputs
+
+| Output | Description |
+|--------|--------------|
+| `plan-exitcode` | Terraform plan exit code |
+| `apply-exitcode` | Terraform apply exit code |
+| `has-changes` | Whether plan detected changes |
+| `cost-analysis` | Cost analysis results |
+
+---
+
+## 🏗️ Option 2: Full Repository Setup
+
+**Perfect for**: Custom workflows, advanced configuration, learning the internals
+
+## 1. Using Marketplace Action
+
 ### Prerequisites
-- AWS Account with appropriate permissions
-- GitHub repository with Actions enabled
-- OpenAI API key (for error analysis)
-- Infracost API key (for cost analysis)
-- Git installed locally
-- Terraform CLI (optional for local testing)
+
+- OpenAI API key with access to GPT-4
+- GitHub token with repository write permissions
+- (Optional) Infracost API key for cost analysis
+
+### How it Works
+
+1. **Error Detection**: Analyzes Terraform logs for errors
+2. **AI Analysis**: Uses OpenAI to understand and generate fixes
+3. **Code Fixing**: Automatically applies fixes to Terraform files
+4. **PR Creation**: Creates a pull request with the fixes
+5. **Cost Analysis**: Optional Infracost integration for cost estimation
+
+### Usage
+
+```yaml
+name: Terraform CI/CD
+on: [push, pull_request]
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.11.4
+      
+      - name: Terraform Init
+        run: terraform init
+        continue-on-error: true
+      
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan 2>&1 | tee terraform.log
+        continue-on-error: true
+      
+      - name: Analyze Terraform Errors
+        if: failure()
+        uses: your-username/terraform-ai-analyzer@v1
+        with:
+          mode: 'analyze'
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          terraform-directory: './terraform'
+          auto-fix: 'true'
+      
+      - name: Analyze Terraform Costs
+        if: success()
+        uses: your-username/terraform-ai-analyzer@v1
+        with:
+          mode: 'cost'
+          infracost-api-key: ${{ secrets.INFRACOST_API_KEY }}
+          terraform-directory: './terraform'
+```
+
+### Inputs
+
+| Input | Description | Required | Default |
+|-------|-------------|----------|---------|
+| `terraform-directory` | Directory containing Terraform files | No | `./terraform` |
+| `openai-api-key` | OpenAI API key for AI analysis | Yes | - |
+| `github-token` | GitHub token for creating PRs | Yes | - |
+| `auto-fix` | Automatically apply fixes and create PR | No | `true` |
+| `branch-name` | Branch name for auto-fixes | No | `auto-tf-fix` |
+| `mode` | Action mode: analyze (for errors) or cost (for successful plans) | No | `analyze` |
+| `infracost-api-key` | Infracost API key (required when mode=cost) | No | - |
+| `infracost-branch` | Branch name for storing infracost data | No | `infracost` |
+
+
+### Outputs
+
+| Output | Description |
+|--------|-------------|
+| `fixes-applied` | Number of fixes applied |
+| `analysis-summary` | AI analysis summary |
+| `cost-breakdown` | Cost analysis results |
+
+## 2. Using The Repository
+
+### 📋 Prerequisites
+- **AWS Account** with appropriate permissions
+- **GitHub repository** with Actions enabled  
+- **OpenAI API key** for error analysis
+- **Infracost API key** for cost analysis (optional)
+- **Git** installed locally
+- **Terraform CLI** (optional for local testing)
 
 ### Step-by-Step Setup
 
@@ -200,8 +370,8 @@ The workflow automatically runs on:
 #### On Pull Request
 1. Runs `terraform plan`
 2. Posts plan summary as PR comment
-3. **If plan fails**: Triggers AI error analysis and creates auto-fix branch
-4. **If plan succeeds**: Uploads plan artifacts and triggers cost analyzer workflow
+3. **If plan fails**: Triggers AI error analysis and creates auto-fix branch ![Plan Fail](.github/images/failed_pipeline.png) ![Terraform Fix](.github/images/terraform_fix.png)
+4. **If plan succeeds**: Uploads plan artifacts and triggers cost analyzer workflow ![Cost Analysis](.github/images/infracost.png)
 
 #### On Manual Apply
 1. Runs `terraform apply`
